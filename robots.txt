@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://TVOJA-DOMENA-ILI-GITHUB-URL/sitemap.xml
