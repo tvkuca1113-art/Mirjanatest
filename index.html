@@ -1287,7 +1287,7 @@ dialog.legal::backdrop{background:rgba(22,41,31,.6);backdrop-filter:blur(4px)}
      verschwindet automatisch nach diesem Datum. Ganz entfernen:
      dieses <aside> löschen.
 ============================================================ -->
-<aside class="vacation" id="vacationNotice" data-until="2026-08-17" role="status">
+<aside class="vacation" id="vacationNotice" data-from="2026-07-29" data-until="2026-08-17" role="status">
   <div class="container vacation-inner">
     <span class="vacation-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
@@ -1620,8 +1620,8 @@ dialog.legal::backdrop{background:rgba(22,41,31,.6);backdrop-filter:blur(4px)}
       <div class="booking-body">
         <p class="booking-vacation" id="bookingVacation">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"/></svg>
-          <span><b>Hinweis:</b> Vom <b>29.07. bis 17.08.</b> bin ich im Urlaub. Ihre Anfrage können Sie
-          trotzdem jederzeit senden – ich melde mich und wir finden gemeinsam einen Termin.</span>
+          <span><b>Hinweis:</b> Vom <b>29.07. bis 17.08.</b> bin ich im Urlaub – Termine sind daher
+          <b>ab dem 18.08.</b> wählbar. Ihre Anfrage können Sie aber jederzeit senden.</span>
         </p>
         <div class="form-grid">
           <div class="field full">
@@ -2184,6 +2184,25 @@ dialog.legal::backdrop{background:rgba(22,41,31,.6);backdrop-filter:blur(4px)}
   }
 
   /* ---------- Terminbuchung (WhatsApp / Anruf) ---------- */
+  /* ---------- Urlaub: Hinweis ausblenden + Zeitraum merken ---------- */
+  var VACATION = null;
+  (function(){
+    var note = document.getElementById("vacationNotice");
+    if(!note) return;
+    var from = note.getAttribute("data-from");
+    var until = note.getAttribute("data-until");
+    if(!from || !until) return;
+    var end = new Date(until + "T23:59:59");
+    if(isNaN(end.getTime())) return;
+    if(new Date() > end){          // Urlaub vorbei – Hinweise entfernen, keine Sperre
+      note.remove();
+      var bn = document.getElementById("bookingVacation");
+      if(bn) bn.remove();
+      return;
+    }
+    VACATION = { from: from, until: until };
+  })();
+
   var form = document.getElementById("bookingForm");
   var chipsBox = document.getElementById("bServiceChips");
   var serviceAdd = document.getElementById("bServiceAdd");
@@ -2198,7 +2217,32 @@ dialog.legal::backdrop{background:rgba(22,41,31,.6);backdrop-filter:blur(4px)}
 
   var today = new Date();
   var iso = today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
-  fDate.min = iso;
+
+  /* ---------- Urlaubszeitraum für die Terminwahl sperren ---------- */
+  function isoOf(d){
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  function shortDE(isoStr){
+    var p = isoStr.split("-");
+    return p[2] + "." + p[1] + ".";
+  }
+  var firstAfterVacation = null;
+  if(VACATION){
+    var d = new Date(VACATION.until + "T00:00:00");
+    d.setDate(d.getDate() + 1);
+    firstAfterVacation = isoOf(d);
+  }
+  function inVacation(v){
+    return !!VACATION && v >= VACATION.from && v <= VACATION.until;
+  }
+  /* Läuft der Urlaub bereits (oder beginnt heute), ist der erste wählbare Tag der Tag danach */
+  fDate.min = (VACATION && iso >= VACATION.from) ? firstAfterVacation : iso;
+
+  var dateErr = fDate.parentNode.querySelector(".err");
+  var dateErrDefault = dateErr ? dateErr.textContent : "";
+  function setDateError(msg){
+    if(dateErr) dateErr.textContent = msg || dateErrDefault;
+  }
 
   /* ---------- Mehrfachauswahl der Behandlungen ---------- */
   var selected = []; /* { name, price } */
@@ -2292,12 +2336,25 @@ dialog.legal::backdrop{background:rgba(22,41,31,.6);backdrop-filter:blur(4px)}
 
   function markInvalid(el, invalid){ el.closest(".field").classList.toggle("invalid", invalid); }
 
+  function checkDate(){
+    if(!fDate.value) { setDateError(null); return false; }
+    if(fDate.value < iso){ setDateError(dateErrDefault); return false; }
+    if(inVacation(fDate.value)){
+      setDateError("Vom " + shortDE(VACATION.from) + " bis " + shortDE(VACATION.until) +
+                   " bin ich im Urlaub. Bitte wählen Sie ein Datum ab dem " + shortDE(firstAfterVacation) + " – " +
+                   "Ihre Anfrage können Sie aber jederzeit senden.");
+      return false;
+    }
+    setDateError(dateErrDefault);
+    return true;
+  }
+
   function validate(){
     var ok = true;
     if(selected.length === 0){ serviceField.classList.add("invalid"); ok = false; }
     else serviceField.classList.remove("invalid");
     var checks = [
-      [fDate, !fDate.value || fDate.value < iso],
+      [fDate, !checkDate()],
       [fTime, !fTime.value],
       [fName, !fName.value.trim()]
     ];
@@ -2312,6 +2369,11 @@ dialog.legal::backdrop{background:rgba(22,41,31,.6);backdrop-filter:blur(4px)}
     }
     return ok;
   }
+
+  /* Sofortige Rückmeldung, wenn ein Urlaubstag gewählt wird */
+  fDate.addEventListener("change", function(){
+    markInvalid(fDate, fDate.value ? !checkDate() : false);
+  });
 
   [fDate,fTime,fName].forEach(function(el){ el.addEventListener("input", function(){ markInvalid(el, false); }); });
 
@@ -2343,21 +2405,6 @@ dialog.legal::backdrop{background:rgba(22,41,31,.6);backdrop-filter:blur(4px)}
     var url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(lines.join("\n"));
     window.open(url, "_blank", "noopener");
   });
-
-  /* ---------- Urlaubs-Hinweis: nach Enddatum automatisch ausblenden ---------- */
-  (function(){
-    var note = document.getElementById("vacationNotice");
-    if(!note) return;
-    var until = note.getAttribute("data-until");
-    if(!until) return;
-    var end = new Date(until + "T23:59:59");
-    if(isNaN(end.getTime())) return;
-    if(new Date() > end){
-      note.remove();
-      var bn = document.getElementById("bookingVacation");
-      if(bn) bn.remove();
-    }
-  })();
 
   /* ---------- Studio-Video: erst laden, wenn sichtbar (Performance) ---------- */
   var sVid = document.getElementById("studioVideo");
