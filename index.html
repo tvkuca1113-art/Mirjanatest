@@ -183,8 +183,10 @@ button{font-family:inherit;cursor:pointer}
 /* ---------- Urlaubs-Hinweis ---------- */
 .vacation{
   position:relative;z-index:5;
+  /* Der Header ist position:fixed – deshalb muss der Inhalt darunter beginnen */
+  padding-top:var(--header-h);
   background:linear-gradient(120deg,var(--forest-deep,#16291F) 0%,var(--forest,#1F3A2C) 55%,#2c5540 100%);
-  border-top:1px solid rgba(194,161,94,.55);border-bottom:1px solid rgba(194,161,94,.55);
+  border-bottom:1px solid rgba(194,161,94,.55);
   box-shadow:0 8px 26px rgba(22,41,31,.20);
 }
 .vacation::before{
@@ -192,27 +194,27 @@ button{font-family:inherit;cursor:pointer}
   background:radial-gradient(58% 120% at 12% 50%,rgba(194,161,94,.20),transparent 70%);
 }
 .vacation-inner{
-  position:relative;display:flex;align-items:center;gap:1.05rem;
-  padding:.95rem 0;color:var(--cream,#F7F2E9);
+  position:relative;display:flex;align-items:center;gap:1rem;
+  padding:1rem 0 1.05rem;color:var(--cream,#F7F2E9);
 }
 .vacation-icon{
-  flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;
+  flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;
   background:linear-gradient(135deg,#F0E3C4,#C2A15E 60%,#B8935A);color:#16281d;
   box-shadow:0 5px 16px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.55);
 }
-.vacation-icon svg{width:23px;height:23px}
-.vacation-text{font-size:.93rem;line-height:1.6;margin:0}
+.vacation-icon svg{width:22px;height:22px}
+.vacation-text{font-size:.9rem;line-height:1.55;margin:0}
 .vacation-text b{
-  display:block;font-family:var(--font-display);font-size:1.22rem;font-weight:700;
-  color:var(--gold-soft,#E4D3AE);letter-spacing:.01em;margin-bottom:.12rem;
+  display:block;font-family:var(--font-display);font-size:1.18rem;font-weight:700;
+  color:var(--gold-soft,#E4D3AE);letter-spacing:.01em;margin-bottom:.1rem;
 }
-.vacation-text span{opacity:.93}
+.vacation-text span{opacity:.92}
 @media (max-width:640px){
-  .vacation-inner{gap:.8rem;padding:.85rem 0;align-items:flex-start}
-  .vacation-icon{width:36px;height:36px}
-  .vacation-icon svg{width:20px;height:20px}
-  .vacation-text{font-size:.86rem;line-height:1.55}
-  .vacation-text b{font-size:1.08rem}
+  .vacation-inner{gap:.75rem;padding:.85rem 0 .9rem;align-items:flex-start}
+  .vacation-icon{width:34px;height:34px}
+  .vacation-icon svg{width:19px;height:19px}
+  .vacation-text{font-size:.82rem;line-height:1.5}
+  .vacation-text b{font-size:1rem;margin-bottom:.14rem}
 }
 
 /* Hinweis in der Buchungs-Karte */
@@ -404,6 +406,8 @@ button{font-family:inherit;cursor:pointer}
   background:var(--forest-deep);
   isolation:isolate;
 }
+/* Steht der Urlaubs-Hinweis darüber, hat dieser den Header-Abstand bereits übernommen */
+.vacation + .hero{padding-top:44px;min-height:auto}
 /* ECHTES STUDIO-FOTO (Hot-Stone-Behandlung) – selbst gehostet */
 .hero-bg{
   position:absolute;inset:-8% 0;z-index:-3;
